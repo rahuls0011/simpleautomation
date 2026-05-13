@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Daily Tracker">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+<title>Daily Tracker</title>
+<style>
+  :root {
+    --bg:#f5f5f0; --surface:#ffffff; --surface2:#f0efe8;
+    --text:#1a1a1a; --text2:#666660; --text3:#999990;
+    --border:rgba(0,0,0,0.1); --border2:rgba(0,0,0,0.18);
+    --purple:#7F77DD; --purple-bg:#EEEDFE; --purple-text:#3C3489;
+    --teal:#1D9E75; --teal-bg:#E1F5EE; --teal-text:#085041;
+    --blue-bg:#E6F1FB; --blue-text:#0C447C;
+    --green-bg:#EAF3DE; --green-text:#27500A;
+    --amber:#EF9F27; --radius:14px;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1a1a1a; --surface:#262626; --surface2:#2e2e2e;
+      --text:#f0f0f0; --text2:#aaaaaa; --text3:#666666;
+      --border:rgba(255,255,255,0.1); --border2:rgba(255,255,255,0.18);
+      --purple-bg:#26215C; --purple-text:#CECBF6;
+      --teal-bg:#04342C; --teal-text:#9FE1CB;
+      --blue-bg:#042C53; --blue-text:#B5D4F4;
+      --green-bg:#173404; --green-text:#C0DD97;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;
+    padding-bottom:max(env(safe-area-inset-bottom),24px);
+  }
+  .header{
+    background:var(--surface);border-bottom:0.5px solid var(--border);
+    padding:16px 20px 12px;
+    padding-top:max(16px,calc(env(safe-area-inset-top) + 12px));
+    position:sticky;top:0;z-index:10;
+  }
+  .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .app-title{font-size:20px;font-weight:600;}
+  .streak-badge{
+    display:flex;align-items:center;gap:5px;
+    background:var(--purple-bg);color:var(--purple-text);
+    font-size:13px;font-weight:500;padding:5px 11px;border-radius:20px;
+  }
+  .date-nav{display:flex;align-items:center;gap:10px;}
+  .date-btn{
+    width:36px;height:36px;border-radius:50%;
+    border:0.5px solid var(--border2);background:var(--surface2);
+    color:var(--text2);font-size:16px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .date-btn:active{background:var(--border);}
+  .date-btn:disabled{opacity:0.3;cursor:default;}
+  .date-btn:focus-visible{outline:2px solid var(--purple);outline-offset:2px;}
+  .date-label{flex:1;text-align:center;font-size:14px;font-weight:500;}
+  .prog-wrap{padding:14px 20px;background:var(--surface);border-bottom:0.5px solid var(--border);}
+  .prog-top{display:flex;justify-content:space-between;margin-bottom:8px;}
+  .prog-title{font-size:13px;color:var(--text2);}
+  .prog-count{font-size:13px;font-weight:500;}
+  .prog-bar-bg{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+  .prog-bar-fill{height:100%;border-radius:3px;background:var(--purple);transition:width 0.3s ease;}
+  .content{padding:16px;}
+  .section-title{
+    font-size:11px;font-weight:500;letter-spacing:0.07em;
+    text-transform:uppercase;color:var(--text3);margin:0 4px 10px;
+  }
+  .habit-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+  .habit-item{
+    display:flex;align-items:center;gap:14px;
+    background:var(--surface);border:0.5px solid var(--border);
+    border-radius:var(--radius);padding:14px 16px;
+    cursor:pointer;min-height:60px;
+    transition:background 0.15s,border-color 0.15s;
+  }
+  .habit-item:active{background:var(--surface2);}
+  .habit-item.done{border-color:rgba(29,158,117,0.35);background:var(--teal-bg);}
+  .habit-item:focus-visible{outline:2px solid var(--purple);outline-offset:2px;}
+  .habit-cb{
+    width:24px;height:24px;border-radius:50%;
+    border:1.5px solid var(--border2);background:var(--surface2);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;transition:all 0.2s;
+  }
+  .habit-item.done .habit-cb{background:var(--teal);border-color:var(--teal);}
+  .check{display:none;}
+  .habit-item.done .check{display:block;}
+  .habit-text{flex:1;font-size:15px;line-height:1.35;transition:color 0.15s;}
+  .habit-item.done .habit-text{color:var(--text2);text-decoration:line-through;}
+  .habit-tag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;flex-shrink:0;}
+  .tag-voice  {background:var(--purple-bg);color:var(--purple-text);}
+  .tag-english{background:var(--teal-bg);  color:var(--teal-text);  }
+  .tag-work   {background:var(--blue-bg);  color:var(--blue-text);  }
+  .tag-health {background:var(--green-bg); color:var(--green-text); }
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
+  .week-day{display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .week-dot{
+    width:36px;height:36px;border-radius:50%;
+    border:0.5px solid var(--border);background:var(--surface2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:500;color:var(--text3);
+  }
+  .week-dot.full   {background:var(--purple);color:#fff;border-color:var(--purple);}
+  .week-dot.partial{background:var(--amber); color:#fff;border-color:var(--amber); }
+  .week-dot.today  {box-shadow:0 0 0 2px var(--purple);}
+  .week-lbl{font-size:10px;color:var(--text3);}
+  .reset-btn{
+    display:block;width:100%;padding:14px;
+    border-radius:var(--radius);border:0.5px solid var(--border2);
+    background:none;color:var(--text2);font-size:14px;cursor:pointer;
+  }
+  .reset-btn:active{background:var(--surface2);}
+  .reset-btn:focus-visible{outline:2px solid var(--purple);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-top">
+    <div class="app-title">Daily Tracker</div>
+    <div class="streak-badge" aria-live="polite">
+      &#9733; <span id="streak-count">0</span> day streak
+    </div>
+  </div>
+  <div class="date-nav" role="group" aria-label="Date navigation">
+    <button class="date-btn" id="prev-btn" aria-label="Go to previous day">&#8592;</button>
+    <div class="date-label" id="date-label" aria-live="polite"></div>
+    <button class="date-btn" id="next-btn" aria-label="Go to next day">&#8594;</button>
+  </div>
+</header>
+
+<div class="prog-wrap" role="region" aria-label="Daily progress">
+  <div class="prog-top">
+    <span class="prog-title">Progress</span>
+    <span class="prog-count" id="prog-count" aria-live="polite">0 / 8</span>
+  </div>
+  <div class="prog-bar-bg">
+    <div class="prog-bar-fill" id="prog-fill"
+      style="width:0%"
+      role="progressbar"
+      aria-valuenow="0" aria-valuemin="0" aria-valuemax="8"
+      aria-label="Habits completed today">
+    </div>
+  </div>
+</div>
+
+<main class="content">
+  <p class="section-title">Habits</p>
+  <div class="habit-list" id="habit-list" role="list"></div>
+
+  <p class="section-title">This week</p>
+  <div class="week-grid" id="week-grid" role="list" aria-label="Weekly habit overview"></div>
+
+  <button class="reset-btn" id="reset-btn">Reset today</button>
+</main>
+
+<script>
+const HABITS=[
+  {text:"Diaphragm breathing drill",      tag:"voice",   cls:"tag-voice"  },
+  {text:"Read aloud with vocal variation", tag:"voice",   cls:"tag-voice"  },
+  {text:"Record yourself speaking",        tag:"voice",   cls:"tag-voice"  },
+  {text:"Learn 5 new vocabulary words",    tag:"english", cls:"tag-english"},
+  {text:"Write and cut — 1 paragraph",     tag:"english", cls:"tag-english"},
+  {text:"Grammar in Use — 1 unit",         tag:"english", cls:"tag-english"},
+  {text:"10-hour work session completed",  tag:"work",    cls:"tag-work"   },
+  {text:"In bed by 10:00 PM",              tag:"health",  cls:"tag-health" },
+];
+const DAYS  =["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+let offset=0;
+
+function dateFor(off){const d=new Date();d.setDate(d.getDate()+off);return d;}
+function keyFor(off){return dateFor(off).toISOString().slice(0,10);}
+function labelFor(off){
+  const d=dateFor(off);
+  if(off===0)  return"Today, "+DAYS[d.getDay()]+" "+d.getDate()+" "+MONTHS[d.getMonth()];
+  if(off===-1) return"Yesterday";
+  return DAYS[d.getDay()]+" "+d.getDate()+" "+MONTHS[d.getMonth()];
+}
+function load(){try{return JSON.parse(localStorage.getItem("tracker_v1")||"{}");}catch(e){return{};}}
+function save(s){try{localStorage.setItem("tracker_v1",JSON.stringify(s));}catch(e){}}
+
+function calcStreak(state){
+  let s=0;
+  for(let i=-1;i>=-365;i--){
+    const d=state[keyFor(i)];
+    if(d&&d.filter(Boolean).length===HABITS.length)s++;else break;
+  }
+  const td=state[keyFor(0)];
+  if(td&&td.filter(Boolean).length===HABITS.length)s++;
+  return s;
+}
+
+function render(){
+  const state=load();
+  const key=keyFor(offset);
+  if(!state[key])state[key]=new Array(HABITS.length).fill(false);
+  const done=state[key].filter(Boolean).length;
+  const pct=Math.round((done/HABITS.length)*100);
+
+  document.getElementById("date-label").textContent=labelFor(offset);
+  document.getElementById("prog-count").textContent=done+" / "+HABITS.length;
+  document.getElementById("streak-count").textContent=calcStreak(state);
+  document.getElementById("next-btn").disabled=offset>=0;
+
+  const fill=document.getElementById("prog-fill");
+  fill.style.width=pct+"%";
+  fill.setAttribute("aria-valuenow",done);
+
+  const list=document.getElementById("habit-list");
+  list.innerHTML="";
+  HABITS.forEach((h,i)=>{
+    const el=document.createElement("div");
+    el.className="habit-item"+(state[key][i]?" done":"");
+    el.setAttribute("role","checkbox");
+    el.setAttribute("aria-checked",state[key][i]?"true":"false");
+    el.setAttribute("aria-label",h.text+" ("+h.tag+")");
+    el.setAttribute("tabindex","0");
+    el.innerHTML=`
+      <div class="habit-cb" aria-hidden="true">
+        <svg class="check" width="13" height="10" viewBox="0 0 13 10" fill="none">
+          <path d="M1 5l4 4 7-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="habit-text">${h.text}</div>
+      <span class="habit-tag ${h.cls}" aria-hidden="true">${h.tag}</span>
+    `;
+    const toggle=()=>{
+      const s=load();
+      if(!s[key])s[key]=new Array(HABITS.length).fill(false);
+      s[key][i]=!s[key][i];
+      save(s);render();
+    };
+    el.addEventListener("click",toggle);
+    el.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();toggle();}});
+    list.appendChild(el);
+  });
+
+  const grid=document.getElementById("week-grid");
+  grid.innerHTML="";
+  for(let i=-6;i<=0;i++){
+    const k=keyFor(i);const d=dateFor(i);
+    const data=state[k];
+    const n=data?data.filter(Boolean).length:0;
+    const cls=n===HABITS.length?"full":n>0?"partial":"";
+    const isToday=i===0;
+    const el=document.createElement("div");
+    el.className="week-day";
+    el.setAttribute("role","listitem");
+    el.setAttribute("aria-label",DAYS[d.getDay()]+": "+n+" of "+HABITS.length+" habits done");
+    el.innerHTML=`
+      <div class="week-dot ${cls}${isToday?" today":""}" aria-hidden="true">${n>0?n:""}</div>
+      <div class="week-lbl">${DAYS[d.getDay()]}</div>
+    `;
+    grid.appendChild(el);
+  }
+}
+
+document.getElementById("prev-btn").addEventListener("click",()=>{offset--;render();});
+document.getElementById("next-btn").addEventListener("click",()=>{if(offset<0){offset++;render();}});
+document.getElementById("reset-btn").addEventListener("click",()=>{
+  if(!confirm("Reset all habits for today?"))return;
+  const s=load();s[keyFor(offset)]=new Array(HABITS.length).fill(false);save(s);render();
+});
+render();
+</script>
+</body>
+</html>
